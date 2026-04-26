@@ -1,0 +1,26 @@
+import math
+
+
+def solve_quadeq(a: float, b: float, c: float) -> tuple[float, float]:
+    """Return the two real roots of a*x^2 + b*x + c = 0 with minimal cancellation."""
+    if a == 0:
+        raise ValueError("a must be nonzero")
+    discriminant = b * b - 4.0 * a * c
+    if discriminant < 0.0:
+        raise ValueError("No real roots")
+    sqrt_d = math.sqrt(discriminant)
+    # Use a numerically stable formulation.
+    q = -0.5 * (b + math.copysign(sqrt_d, b))
+    x1 = q / a
+    x2 = c / q
+    return x1, x2
+
+
+if __name__ == "__main__":
+    examples = [
+        (1.0, 1e15, 1e14),
+        (1.0, -1e15, 1e14),
+    ]
+    for a, b, c in examples:
+        roots = solve_quadeq(a, b, c)
+        print(f"a={a}, b={b}, c={c} -> roots={roots}")
