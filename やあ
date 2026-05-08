@@ -100,11 +100,12 @@ for n in [2, 5, 10, 50]:
 Run your function for several dimensions and report the result.
 
 ```{python}
-# TODO: run your verification for several dimensions.
-# Example:
-# for n in [2, 5, 10, 50]:
-#     ok = verify_norm_inequalities(n_dims=n, n_tests=1000)
-#     print(n, ok)
+# Run verification for several dimensions with 1000 tests each
+print("Verification Results (1000 tests per dimension):")
+print("-" * 50)
+for n in [2, 5, 10, 50]:
+    ok = verify_norm_inequalities(n_dims=n, n_tests=1000)
+    print(f"n = {n:3d}: {ok}")
 ```
 
 ---
@@ -115,11 +116,30 @@ Explain what your numerical experiment confirms.
 
 > **Your answer:**
 >
-> *(write here)*
+> The numerical experiment confirms that all three norm inequalities hold for random vectors across different dimensions (n = 2, 5, 10, 50). Specifically:
+> 
+> - **Inequality (5)**: The L2 norm is bounded below by the L2 norm and above by √n times the L2 norm, with the L1 norm in between. This shows how the L1 norm scales with dimension.
+> 
+> - **Inequality (6)**: The L∞ norm (maximum absolute value) is at most the L1 norm, which itself is at most n times the L∞ norm. This captures the relationship between the maximum element and the sum of absolute values.
+> 
+> - **Inequality (7)**: The L∞ norm is bounded above by the L2 norm, which is bounded above by √n times the L∞ norm. This shows that the Euclidean norm lies between these two extremes.
+>
+> All 1000 randomly generated vectors in each dimension satisfied all three inequalities, providing strong numerical evidence that these theoretical bounds are correct.
 
-Also explain why a numerical experiment is useful even though it is not a
-mathematical proof.
+Also explain why a numerical experiment is useful even though it is not a mathematical proof.
 
 > **Your answer:**
 >
-> *(write here)*
+> While numerical experiments cannot replace mathematical proofs, they are invaluable for several reasons:
+>
+> 1. **Verification of theory**: Running tests across multiple dimensions and many random instances builds confidence that the theoretical inequalities are not only mathematically sound but also computationally valid.
+>
+> 2. **Detecting implementation errors**: Numerical experiments catch bugs in formulas or algorithms that might not be obvious from the code alone.
+>
+> 3. **Understanding behavior**: Observing how inequalities behave across different dimensions (2 to 50) helps develop intuition about how norms scale.
+>
+> 4. **Pedagogical value**: Working through numerical verification reinforces understanding of the concepts—students interact with the mathematics in concrete, computational terms.
+>
+> 5. **Complementary approach**: Math proofs show *why* inequalities must hold; numerical experiments show *that* they do hold in practice, providing two perspectives on the same mathematical reality.
+>
+> In this case, the consistent verification across all test cases provides experimental confirmation of the theoretical bounds, even though a formal proof would rely on algebraic arguments (like the Cauchy-Schwarz inequality for inequality 5).
