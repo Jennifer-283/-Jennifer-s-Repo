@@ -661,6 +661,52 @@ the default and the one we use throughout the course.
 We will revisit $\mathrm{RU}$ and $\mathrm{RD}$ in a later lecture on
 **interval arithmetic**.
 
+::: {.callout-tip collapse="true"}
+## Q&A — What are the four IEEE 754 rounding modes and why use them?
+
+**Date:** 2026-05-12  
+**Anchor:** "Other rounding modes" — "IEEE 754 actually defines four rounding modes"
+
+**Question.**  
+What are the four rounding modes in IEEE 754? Why would anyone use the other three instead of round-to-nearest?
+
+**Answer.**
+
+1. **TL;DR** — IEEE 754 provides four rounding modes: **RN** (round to nearest; default), **RU** (round up toward $+\infty$), **RD** (round down toward $-\infty$), and **RZ** (round toward zero / truncate). The three non-default modes are used for **rigorous error bounding** (especially interval arithmetic) where you need to *guarantee* an answer stays within a certain range.
+
+2. **Why / How** — 
+   - **Round-to-nearest (RN)** is the default because it minimizes error on average over many operations.
+   - **Round-up (RU)** and **round-down (RD)** are used together in **interval arithmetic**: if you want to compute an interval $[a, b]$ that is *guaranteed* to contain the true answer, you round down to get $a$ and round up to get $b$. No matter what rounding error occurs, the true value will always be trapped inside $[a, b]$.
+   - **Round-toward-zero (RZ)** is a truncation mode; it's sometimes used in older hardware or when you want to drop fractional parts without statistical bias toward any direction.
+
+3. **See also** — [Rounding "Nearest" (RN)](#sec-rounding); later lectures on **interval arithmetic** for RU and RD
+
+::: {.callout-note collapse="true"}
+### Optional: code to see rounding modes in action
+```python
+import decimal
+
+# Set up a number that falls between two representable values
+x = 1.5 + 2**(-53)  # Just past the midpoint
+
+# Demonstrate different rounding modes (using decimal for clarity)
+d = decimal.Decimal(str(x))
+
+# Round to nearest (default)
+print(f"Round to nearest: {d.quantize(decimal.Decimal('0.1'), rounding=decimal.ROUND_HALF_UP)}")
+
+# Round up (ceiling)
+print(f"Round up (toward +∞): {d.quantize(decimal.Decimal('0.1'), rounding=decimal.ROUND_UP)}")
+
+# Round down (floor)
+print(f"Round down (toward -∞): {d.quantize(decimal.Decimal('0.1'), rounding=decimal.ROUND_DOWN)}")
+
+# Round toward zero
+print(f"Round toward zero: {d.quantize(decimal.Decimal('0.1'), rounding=decimal.ROUND_TOWARDS_ZERO)}")
+```
+:::
+:::
+
 ### Observation: rounding around $1$
 
 Look at the gap between $1$ and the **next** representable number larger
