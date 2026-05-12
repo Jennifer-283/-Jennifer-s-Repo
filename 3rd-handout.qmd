@@ -268,6 +268,59 @@ $$
 So the smallest positive `float64` value is *not* $m_n$ — it is this
 much tinier denormalized number.
 
+::: {.callout-tip collapse="true"}
+## Q&A — Why set $d_0 = 0$, only $d_{52} = 1$ for smallest number?
+
+**Date:** 2026-05-12  
+**Anchor:** "The smallest positive number representable in binary64" — "squeeze out the smallest positive number"
+
+**Question.**  
+Why do we set $d_0 = 0$ and only $d_{52} = 1$ to get $m_d$? Why not use other bits?
+
+**Answer.**
+
+1. **TL;DR** — To minimize the significand, we turn off all bits except the rightmost ($d_{52}$), because each leftmost bit contributes a much larger fraction (e.g., $d_0 = 1$ means $2^0 = 1$, while $d_{52} = 1$ means $2^{-52}$, which is tiny).
+
+2. **Why / How** — Denormalized numbers are fixed at $d_0 = 0$ by the standard. The significand is:
+$$
+\dfrac{0}{2^0} + \dfrac{d_1}{2^1} + \dfrac{d_2}{2^2} + \cdots + \dfrac{d_{52}}{2^{52}}
+$$
+   
+   To make this sum as **small as possible**, we want each term to be small. But the **leftmost bits contribute much larger amounts**:
+   - If we set $d_1 = 1$, we add $\frac{1}{2^1} = \frac{1}{2} = 0.5$
+   - If we set $d_2 = 1$, we add $\frac{1}{2^2} = 0.25$
+   - …all the way to…
+   - If we set $d_{52} = 1$, we add $\frac{1}{2^{52}} \approx 2.22 \times 10^{-16}$
+   
+   So to minimize, we set **all left bits to 0** and only turn on the **rightmost bit** ($d_{52} = 1$). This gives the smallest possible non-zero significand for a denormalized number.
+   
+   Combining this with the **smallest denormalized exponent** ($e = -1022$, which is fixed for all denormalized numbers):
+$$
+m_d = 2^{-52} \cdot 2^{-1022} = 2^{-1074}
+$$
+
+3. **See also** — [Denormalized numbers — fill the gap by trading precision for range](#denormalized-numbers--fill-the-gap-by-trading-precision-for-range); [Machine epsilon](#sec-machine-epsilon)
+
+::: {.callout-note collapse="true"}
+### Optional: code to verify
+```python
+# Reconstruct m_d from its components
+m_d_from_formula = 2**(-52) * 2**(-1022)
+m_d_direct = 2**(-1074)
+
+print(f"m_d from 2^-52 × 2^-1022 = {m_d_from_formula:.6e}")
+print(f"m_d from 2^-1074          = {m_d_direct:.6e}")
+print(f"Match: {m_d_from_formula == m_d_direct}")
+
+# Verify it's the smallest positive float64
+import sys
+fi = sys.float_info
+print(f"\nSmallest positive float64 = {fi.min:.6e}")
+print(f"Is it 2^-1074? {fi.min == 2**(-1074)}")
+```
+:::
+:::
+
 | Class | $d_0$ | $e$ | Precision |
 |---|---|---|---|
 | **Normalized** | $1$ | $-1022 \leq e \leq 1023$ | full 53 bits |
@@ -731,6 +784,47 @@ plt.tight_layout()
 plt.show()
 ```
 
+::: {.callout-tip collapse="true"}
+## Q&A — What do `ax.text()` and `ax.annotate()` do in matplotlib?
+
+**Date:** 2026-05-12  
+**Anchor:** "Observation: rounding around $1$" — "Machine epsilon annotation (close to 1+ε)"
+
+**Question.**  
+I don't understand the matplotlib code that draws the machine epsilon label and arrow. What do `ax.text()` and `ax.annotate()` do?
+
+**Answer.**
+
+1. **TL;DR** — `ax.text(x, y, string, ...)` places a text label at position $(x, y)$ with alignment control. `ax.annotate(..., xy=(head), xytext=(tail), arrowprops=...)` draws an arrow from a starting point to an endpoint with optional label, useful for pointing annotations.
+
+2. **Why / How** — 
+   - **`ax.text(x, y, text, ha=..., va=..., fontsize=..., color=...)`** draws static text at coordinate $(x, y)$. The alignment parameters control the *anchor point*:
+     - `ha="left"` → text starts (left-aligned) at $(x, y)$
+     - `va="center"` → text is vertically centered at $y$
+   
+   - **`ax.annotate("", xy=(head), xytext=(tail), arrowprops=dict(...))`** draws an arrow. The `xy` parameter is where the **arrow points to** (arrowhead location), and `xytext` is where the arrow **starts** (tail location). The `arrowprops` dict defines the arrow style:
+     - `arrowstyle="->"` → simple arrow
+     - `color=RED` → arrow color
+     - `lw=1.4` → line width
+
+   - **Example from the code:**
+     ```python
+     ax.text(x_eps + 0.85, 0.55,
+             r"$2^{-52}\ \leftarrow$ Machine epsilon of Float 64",
+             ha="left", va="center", fontsize=12.5, color=BLUE, fontweight="bold")
+     ```
+     This places the **text label** at position $(x_\text{eps} + 0.85, 0.55)$, left-aligned, in blue, bold font.
+     
+     ```python
+     ax.annotate("", xy=(x_eps + 0.45, 0.20),
+                 xytext=(x_eps + 0.95, 0.45),
+                 arrowprops=dict(arrowstyle="->", color=RED, lw=1.4))
+     ```
+     This draws a **red arrow** starting at $(x_\text{eps} + 0.95, 0.45)$ (near the text label) and pointing down to $(x_\text{eps} + 0.45, 0.20)$ (the tick on the number line)—effectively creating a visual pointer from the label to the value it annotates.
+
+3. **See also** — [Machine epsilon](#sec-machine-epsilon); matplotlib docs: [annotate](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.annotate.html) and [text](https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.text.html)
+:::
+
 #### Machine epsilon {#sec-machine-epsilon}
 
 The gap we just used near $1$ deserves a formal name. The
@@ -872,4 +966,3 @@ print(f"(1 + 3ε/4) - 1 = {(1 + 3*eps/4)   - 1!r}")
 | Largest positive | $M = (2 - 2^{-52}) \cdot 2^{1023} \approx 1.798 \times 10^{308}$ |
 | Machine epsilon | $\varepsilon = 2^{-52} \approx 2.22 \times 10^{-16}$ — distance from $1$ to the next float64 |
 | Default rounding | Round to nearest (RN); on a tie, the side with **even $d_{52}$** wins |
-
