@@ -418,6 +418,80 @@ The induced matrix norm satisfies the following properties:
 The last two inequalities are especially useful for error analysis,
 because matrices often represent transformations or iterative steps.
 
+::: {.callout-tip collapse="true"}
+## Q&A — Why are properties 4 and 5 useful for error analysis?
+
+**Date:** 2026-05-14  
+**Anchor:** Basic Properties — "especially useful for error analysis"
+
+**Question.**  
+Why are the last two inequalities (properties 4 and 5) especially useful for error analysis? What do "transformations or iterative steps" mean in this context?
+
+**Answer.**
+
+1. **TL;DR** — Property 4 lets you bound how much a matrix amplifies error in a single step. Property 5 lets you chain operations: the total amplification of $k$ steps is bounded by the product of individual amplifications. This is how we prove numerical methods converge.
+
+2. **Why / How** —
+
+   **Property 4:** $\|Ax\| \leq \|A\|\,\|x\|$
+   
+   *What it means:* If you feed a vector $x$ into a linear transformation $A$, the output won't be more than $\|A\|$ times as large as the input.
+   
+   **Error analysis example:** Suppose you're solving $Ax = b$ but due to rounding, your input has a small error $\delta x$. Then:
+   $$\|A(\delta x)\| \leq \|A\|\,\|\delta x\|.$$
+   
+   So the error is *amplified* by at most $\|A\|$. If $\|A\|$ is large, small input errors become large output errors—the system is **ill-conditioned**. If $\|A\|$ is close to 1, errors stay small—the system is **well-conditioned**.
+
+   **Property 5:** $\|AB\| \leq \|A\|\,\|B\|$
+   
+   *What it means:* When you compose two matrices (apply $B$ then $A$), the amplification doesn't get worse than multiplying the individual amplifications.
+   
+   **Iterative method example:** Many numerical algorithms work by repeatedly applying a step: $x_{k+1} = Mx_k$ (e.g., fixed-point iteration, Newton's method).
+   
+   After $k$ iterations:
+   $$x_k = M^k x_0.$$
+   
+   Using property 5 recursively:
+   $$\|M^k\| = \|M \cdot M^{k-1}\| \leq \|M\|\,\|M^{k-1}\| \leq \cdots \leq \|M\|^k.$$
+   
+   So if any error exists in $x_0$, it gets magnified by $\|M\|^k$ after $k$ steps. If $\|M\| < 1$, then $\|M\|^k \to 0$ as $k \to \infty$—the algorithm **converges**. If $\|M\| > 1$, errors explode—the algorithm **diverges**.
+
+3. **See also** — [Induced Matrix Norms](#sec-matrix-norms), iterative methods (appear in later lectures)
+
+::: {.callout-note collapse="true"}
+### Concrete example
+```python
+import numpy as np
+from numpy import linalg as LA
+
+# Example: iteration x_{k+1} = M * x_k
+M = np.array([[0.5, 0.2],
+              [0.1, 0.4]], dtype=float)
+
+x0 = np.array([1.0, 1.0])
+print("x0 =", x0)
+
+# Compute M's norm (spectral norm)
+norm_M = LA.norm(M, 2)
+print(f"\n||M||_2 = {norm_M:.4f}")
+
+# Since ||M|| < 1, we expect convergence
+print(f"Since ||M|| < 1, errors shrink by factor {norm_M:.4f} each iteration.\n")
+
+# Iterate and watch the norm of the error decay
+# (Simulate error as deviation from fixed point x* = 0)
+for k in range(6):
+    if k == 0:
+        x = x0
+    else:
+        x = M @ x
+    error = LA.norm(x, 2)
+    predicted_error = LA.norm(M, 2)**k * LA.norm(x0, 2)
+    print(f"k={k}: ||x_k|| = {error:.6f},  ||M||^k * ||x_0|| = {predicted_error:.6f}")
+```
+:::
+:::
+
 ### Matrix $\ell^p$ Norms
 
 The matrix norm induced by the vector $\ell^p$ norm is
