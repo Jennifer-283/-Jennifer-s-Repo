@@ -81,7 +81,7 @@ Numerical analysis is full of statements such as "the computed answer is
 close to the true answer." To make this precise, we need a way to measure
 how large the error is.
 
-For this purpose, we need a way to measure the **size** of a vector, the
+For this purpose, we need to measure the **size** of a vector, the
 **size** of an error vector, and the **size** of a matrix acting on
 vectors. This is the role of **norms**.
 
@@ -126,6 +126,109 @@ properties for all $x, y \in \mathbb{R}^n$ and all $\alpha \in \mathbb{R}$:
 
 The triangle inequality is often the most important one. It lets us
 bound complicated errors by breaking them into simpler pieces.
+
+::: {.callout-tip collapse="true"}
+## Q&A — How does the triangle inequality help bound complicated errors?
+
+**Date:** 2026-05-14  
+**Anchor:** Definition — "bound complicated errors by breaking them into simpler pieces"
+
+**Question.**  
+How does the triangle inequality $\|x + y\| \leq \|x\| + \|y\|$ help us bound complicated errors? What does "breaking them into simpler pieces" mean?
+
+**Answer.**
+
+1. **TL;DR** — The triangle inequality lets you add up error bounds for individual steps instead of analyzing the entire process at once. This turns a complex problem into a sum of simpler problems.
+
+2. **Why / How** —
+
+   **The intuition:** Imagine traveling from point $A$ to point $C$. You can go **directly** ($\|AC\|$) or **via point $B$** ($\|AB\| + \|BC\|$). The triangle inequality says:
+   $$\|AC\| = \|(AB) + (BC)\| \leq \|AB\| + \|BC\|.$$
+   Direct travel is never longer than taking a detour.
+
+   **In error analysis:** This same idea applies to error vectors. Suppose the true solution is $x^*$ and you approximate it in steps:
+   - Start with an initial approximation $x_0$.
+   - Apply an algorithm to get $x_1$, $x_2$, ..., $x_k$.
+   - Each step introduces error: $e_i = x_i - x_{i-1}$ (the deviation from one step to the next).
+   
+   The total error is:
+   $$x_k - x^* = (x_k - x_{k-1}) + (x_{k-1} - x_{k-2}) + \cdots + (x_1 - x_0) + (x_0 - x^*) = e_k + e_{k-1} + \cdots + e_0.$$
+   
+   By the triangle inequality:
+   $$\|x_k - x^*\| = \|e_k + e_{k-1} + \cdots + e_0\| \leq \|e_k\| + \|e_{k-1\| + \cdots + \|e_0\|.$$
+
+   **Why this matters:** Instead of bounding $\|x_k - x^*\|$ directly (which could be hard), you **bound each individual error** $\|e_i\|$ and add them up. This is much easier!
+
+3. **Concrete example:**
+
+   Suppose you're solving a problem in 3 steps. Each step introduces error:
+   - After step 1: error is at most $0.01$
+   - After step 2: additional error is at most $0.02$
+   - After step 3: additional error is at most $0.01$
+   
+   Without the triangle inequality, you don't know how these errors combine. With it:
+   $$\text{total error} \leq 0.01 + 0.02 + 0.01 = 0.04.$$
+
+   **Compare this to reality:** If errors could "cancel out" (like real vectors at angles), you might get close to zero. But the triangle inequality gives you a **safe upper bound** that works for any combination of errors.
+
+4. **See also** — [Basic Properties](#sec-matrix-norms) (error propagation through matrices), [Why Norms Matter](#sec-why-norms) (convergence analysis)
+
+::: {.callout-note collapse="true"}
+### Numerical example
+```python
+import numpy as np
+from numpy import linalg as LA
+
+# Simulate a 3-step algorithm where errors accumulate
+print("Example: Multi-step algorithm with accumulated errors\n")
+
+# True solution (unknown to us)
+x_true = np.array([1.0, 2.0, 3.0])
+
+# We compute approximations x_0, x_1, x_2, x_3
+# Each step introduces an error
+x0 = np.array([1.05, 2.10, 2.95])  # initial guess (error = 0.05, 0.10, -0.05)
+x1 = np.array([1.02, 2.05, 3.02])  # after step 1
+x2 = np.array([1.01, 2.01, 3.00])  # after step 2
+x3 = np.array([1.00, 2.00, 3.00])  # after step 3
+
+# Compute errors at each step
+e0 = x0 - x_true  # error in initial guess
+e1 = x1 - x0      # error introduced in step 1
+e2 = x2 - x1      # error introduced in step 2
+e3 = x3 - x2      # error introduced in step 3
+
+print("Step 0 (initial):")
+print(f"  error vector e_0 = {e0}")
+print(f"  ||e_0|| = {LA.norm(e0):.6f}\n")
+
+print("Step 1:")
+print(f"  error introduced e_1 = {e1}")
+print(f"  ||e_1|| = {LA.norm(e1):.6f}\n")
+
+print("Step 2:")
+print(f"  error introduced e_2 = {e2}")
+print(f"  ||e_2|| = {LA.norm(e2):.6f}\n")
+
+print("Step 3:")
+print(f"  error introduced e_3 = {e3}")
+print(f"  ||e_3|| = {LA.norm(e3):.6f}\n")
+
+# Total error
+total_error = x0 - x_true
+print("Total error (x_0 - x_true):")
+print(f"  ||total error|| = {LA.norm(total_error):.6f}\n")
+
+# Triangle inequality bound
+bound = LA.norm(e0) + LA.norm(e1) + LA.norm(e2) + LA.norm(e3)
+print("Triangle inequality bound: sum of individual errors")
+print(f"  ||e_0|| + ||e_1|| + ||e_2|| + ||e_3|| = {bound:.6f}\n")
+
+print(f"Actual total error ≤ bound? {LA.norm(total_error):.6f} ≤ {bound:.6f}?")
+print(f"Yes! {LA.norm(total_error) <= bound}")
+```
+:::
+:::
 
 ### The $\ell^p$ Norms
 
